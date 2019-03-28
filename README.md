@@ -6,4 +6,4 @@ This script pings some of IP address then send commands to those can be connecte
 
 There is also a script with the same functionality, which is implemented using the threading module.
 
-https://github.com/lyc10031/Hello-world
+https://github.com/lyc10031/PY-remote-command.git
