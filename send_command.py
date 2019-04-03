@@ -4,47 +4,54 @@ import time,itertools,sys
 import queue
 from configparser import ConfigParser
 from itertools import chain
+import aioping
 
 q1 = queue.Queue()
 
 
+async def do_ping(host):
+    try:
+        await aioping.ping(host,2) * 1000
+        return True
+    except TimeoutError:
+        return False
+
 async def send_command(host_info):
     host,port,username,password = split_host_info(host_info)
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    try:
-        ssh.connect(hostname=host,port=int(port),username=username,password=password)
-        # 获取命令结果
-        # command_mac = "/usr/sbin/ifconfig | grep ether | awk 'NR==1 {print $2}'"
-        # stdin,stdout,stderr = ssh.exec_command(command_mac)
-        # await asyncio.sleep(0.1)
-        # status = stdout.read().decode('UTF-8').strip()
-        # record_host_status(host_mark,status)
-        # print(host,'<-->','[',status,']')
+    if (await do_ping(host)):
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            ssh.connect(hostname=host,port=int(port),username=username,password=password)
+            # 获取命令结果
+            # command_mac = "/usr/sbin/ifconfig | grep ether | awk 'NR==1 {print $2}'"
+            # stdin,stdout,stderr = ssh.exec_command(command_mac)
+            # await asyncio.sleep(0.1)
+            # status = stdout.read().decode('UTF-8').strip()
+            # record_host_status(host_mark,status)
+            # print(host,'<-->','[',status,']')
 
-        command_date = f'date'
-        stdin,stdout,stderr = ssh.exec_command(command_date)
-        await asyncio.sleep(0.1)
-        status = stdout.read().decode('UTF-8').strip()
-        # record_host_status(host_mark,status)
-        print(host,'<-->','[',status,']','times')
+            command_date = f'date'
+            stdin,stdout,stderr = ssh.exec_command(command_date)
+            await asyncio.sleep(0.1)
+            status = stdout.read().decode('UTF-8').strip()
+            #   record_host_status(host_mark,status)
+            print(host,'<-->','[',status,']','times')
 
-        # 执行reboot命令
-        # command_reboot = f'/sbin/reboot'
-        #ssh.exec_command(command_reboot)
-        # await asyncio.sleep(0.1)
-        #status = stdout.read().decode('UTF-8').strip()
+            # 执行reboot命令
+            # command_reboot = f'/sbin/reboot'
+            #ssh.exec_command(command_reboot)
+            # await asyncio.sleep(0.1)
+            #status = stdout.read().decode('UTF-8').strip()
 
-    except Exception as e:
-        print(f' * {host} cannot be connected !!!')
-        print(e)
-        time.sleep(0.2)
-    finally:
-        ssh.close()
-
-
-
-
+        except Exception as e:
+            print(f"\033[1;31m * {host} cannot be connected !!!\033[0m")
+            print(e)
+            time.sleep(0.2)
+        finally:
+            ssh.close()
+    else:
+        print(f"\033[1;31m {host} cannot be connected !!!\033[0m")
 
 def split_host_info(host_info):
     host,port,username,password = host_info.split(';')
