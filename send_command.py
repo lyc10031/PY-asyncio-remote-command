@@ -18,6 +18,7 @@ async def do_ping(host):
 
 async def send_command(host_info):
     host,port,username,password = split_host_info(host_info)
+    host_mark = host.split('.')[-1]
     if (await do_ping(host)):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -31,12 +32,13 @@ async def send_command(host_info):
             # record_host_status(host_mark,status)
             # print(host,'<-->','[',status,']')
 
-            command_date = f'date'
+#            command_date = f'date'
+            command_date = f'cat reboot_{host_mark}_test.txt | wc -l && cat network_x200_status.log | grep ERROR && echo "ERROR"|| echo "OK"'
             stdin,stdout,stderr = ssh.exec_command(command_date)
             await asyncio.sleep(0.1)
             status = stdout.read().decode('UTF-8').strip()
             #   record_host_status(host_mark,status)
-            print(host,'<-->','[',status,']','times')
+            print(host,'<-->','[',status,']')
 
             # 执行reboot命令
             # command_reboot = f'/sbin/reboot'
